@@ -32,7 +32,14 @@ def test_avg(t: Tensor) -> None:
 @given(tensors(shape=(2, 3, 4)))
 def test_max(t: Tensor) -> None:
     # TODO: Implement for Task 4.4.
-    raise NotImplementedError("Need to implement for Task 4.4")
+    dropped_tensor = minitorch.dropout(t, 0.0)
+    sampled_index = dropped_tensor._tensor.sample()
+    assert dropped_tensor[sampled_index] == t[sampled_index]
+    q = minitorch.dropout(t, 1.0)
+    assert q[q._tensor.sample()] == 0.0
+    dropped_tensor = minitorch.dropout(t, 1.0, ignore=True)
+    sampled_index = dropped_tensor._tensor.sample()
+    assert dropped_tensor[sampled_index] == t[sampled_index]
 
 
 @pytest.mark.task4_4
@@ -59,14 +66,14 @@ def test_max_pool(t: Tensor) -> None:
 @pytest.mark.task4_4
 @given(tensors())
 def test_drop(t: Tensor) -> None:
-    q = minitorch.dropout(t, 0.0)
-    idx = q._tensor.sample()
-    assert q[idx] == t[idx]
+    dropped_tensor = minitorch.dropout(t, 0.0)
+    sampled_index = dropped_tensor._tensor.sample()
+    assert dropped_tensor[sampled_index] == t[sampled_index]
     q = minitorch.dropout(t, 1.0)
     assert q[q._tensor.sample()] == 0.0
-    q = minitorch.dropout(t, 1.0, ignore=True)
-    idx = q._tensor.sample()
-    assert q[idx] == t[idx]
+    dropped_tensor = minitorch.dropout(t, 1.0, ignore=True)
+    sampled_index = dropped_tensor._tensor.sample()
+    assert dropped_tensor[sampled_index] == t[sampled_index]
 
 
 @pytest.mark.task4_4

@@ -39,6 +39,9 @@ Run marked test:
 
 ```
 pytest -m task4_1
+pytest -m task4_2
+pytest -m task4_3
+pytest -m task4_4
 ```
 
 * Set up the environment

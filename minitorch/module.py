@@ -9,33 +9,41 @@ class Module:
 
     Attributes
     ----------
-        _modules : Storage of the child modules
-        _parameters : Storage of the module's parameters
+        _modules : Storage of the child modules (name -> Module)
+        _parameters : Storage of the module's parameters (name -> parameter)
         training : Whether the module is in training mode or evaluation mode
 
     """
 
+    # the underscore (_) prefix in attribute names is a convention to indicate
+    # that the attribute is private for internal use only
     _modules: Dict[str, Module]
     _parameters: Dict[str, Parameter]
     training: bool
 
     def __init__(self) -> None:
-        self._modules = {}
-        self._parameters = {}
-        self.training = True
+        self._modules = {}  # Instance attribute
+        self._parameters = {}  # Instance attribute
+        self.training = True  # Instance attribute
 
     def modules(self) -> Sequence[Module]:
         """Return the direct child modules of this module."""
-        m: Dict[str, Module] = self.__dict__["_modules"]
+        m: Dict[str, Module] = self.__dict__["_modules"]  # key: str, value: Module
         return list(m.values())
 
     def train(self) -> None:
-        """Set the mode of this module and all descendent modules to `train`."""
-        raise NotImplementedError("Need to include this file from past assignment.")
+        """Set the `training` flag of this and descendent to true."""
+        # TODO: Implement for Task 0.4.
+        for module in self.modules():
+            module.train()  # Recursively set the training flag of all child modules to True
+        self.training = True
 
     def eval(self) -> None:
-        """Set the mode of this module and all descendent modules to `eval`."""
-        raise NotImplementedError("Need to include this file from past assignment.")
+        """Set the `training` flag of this and descendent to false."""
+        # TODO: Implement for Task 0.4.
+        for module in self.modules():
+            module.eval()  # Recursively set the training flag of all child modules to False
+        self.training = False
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """Collect all the parameters of this module and its descendents.
@@ -45,11 +53,21 @@ class Module:
             The name and `Parameter` of each ancestor parameter.
 
         """
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 0.4.
+        params = {}
+        # Collect the parameters of this module
+        for key, value in self._parameters.items():
+            params[key] = value
+        # Recursively collect the parameters of all child modules
+        for module_name, module in self._modules.items():
+            for parameter_name, parameter in module.named_parameters():
+                params[module_name + "." + parameter_name] = parameter
+        return list(params.items())
 
     def parameters(self) -> Sequence[Parameter]:
         """Enumerate over all the parameters of this module and its descendents."""
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 0.4.
+        return [j for _, j in self.named_parameters()]
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """Manually add a parameter. Useful helper for scalar parameters.
@@ -85,6 +103,7 @@ class Module:
         return None
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Call the module with the given input."""
         return self.forward(*args, **kwargs)
 
     def __repr__(self) -> str:

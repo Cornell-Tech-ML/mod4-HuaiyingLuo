@@ -21,7 +21,9 @@ from .scalar_functions import (
     Sigmoid,
 )
 
-ScalarLike = Union[float, int, "Scalar"]
+ScalarLike = Union[
+    float, int, "Scalar"
+]  # It represents a type that can be either a float, an int, or an instance of the Scalar class.
 
 
 @dataclass
@@ -58,8 +60,11 @@ class Scalar:
     """
 
     data: float
+    # Stores the history of the operations that created this scalar.
     history: Optional[ScalarHistory] = field(default_factory=ScalarHistory)
+    # Holds a ScalarHistory object, which tracks the history of operations (ScalarFunction instances) that created this scalar.
     derivative: Optional[float] = None
+    # Stores the derivative of this scalar with respect to some variable, as computed during the backward pass of automatic differentiation.
     name: str = field(default="")
     unique_id: int = field(default=0)
 
@@ -112,21 +117,36 @@ class Scalar:
         return self.history is not None and self.history.last_fn is None
 
     def is_constant(self) -> bool:
+        """True if this variable was created by an operation that has no parents."""
         return self.history is None
 
     @property
     def parents(self) -> Iterable[Variable]:
-        """Get the variables used to create this one."""
+        """Returns the parent variables of the current variable."""
         assert self.history is not None
         return self.history.inputs
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+        """Backward process a function by passing it in a context
+          and then collecting the local derivatives
+
+        Args:
+        ----
+            d_output (Any): The derivative of the output with respect to this object.
+
+        Returns:
+        -------
+        Iterable[Tuple[Variable, Any]]: An iterable of tuples, where each tuple contains a Variable and its corresponding derivative.
+
+        """
         h = self.history
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        raise NotImplementedError("Need to include this file from past assignment.")
+        ## TODO: Implement for Task 1.3.
+        x = h.last_fn._backward(h.ctx, d_output)
+        return list(zip(h.inputs, x))
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """Calls autodiff to fill in the derivatives for the history of this object.
@@ -141,25 +161,83 @@ class Scalar:
             d_output = 1.0
         backpropagate(self, d_output)
 
-    raise NotImplementedError("Need to include this file from past assignment.")
+    ## TODO: Implement for Task 1.2.
+    # Implement the overridden mathematical functions required for the minitorch.Scalar class.
+    # Each of these requires wiring the internal Python operator to the correct minitorch.Function.forward call.
+
+    ## Overridden mathematical functions
+    # less than
+    # greater than
+    # subtract
+    # negation
+    # +
+    # equal
+    # log
+    # exp
+    # sigmoid
+    # relu
+
+    # Override the addition (+) operator
+    def __add__(self, b: ScalarLike) -> Scalar:
+        return Add.apply(self, b)
+
+    # Override the less than (<) operator
+    def __lt__(self, b: ScalarLike) -> Scalar:
+        return LT.apply(self, b)
+
+    # Override the greater than (>) operator
+    def __gt__(self, b: ScalarLike) -> Scalar:
+        return LT.apply(b, self)
+
+    # Override the equality (==) operator
+    def __eq__(self, b: ScalarLike) -> Scalar:
+        return EQ.apply(b, self)
+
+    # Override the subtract (-) operator
+    def __sub__(self, b: ScalarLike) -> Scalar:
+        return Add.apply(self, -b)
+
+    # Override the negation (-) operator
+    def __neg__(self) -> Scalar:
+        return Neg.apply(self)
+
+    ## ! Note that there is no such operators in python, so we need to implement them ourselves.
+    # Implement the log operator
+    def log(self) -> Scalar:
+        """Returns the natural logarithm of the current scalar."""
+        return Log.apply(self)
+
+    # Implement the exp operator
+    def exp(self) -> Scalar:
+        """Returns the exponential of the current scalar."""
+        return Exp.apply(self)
+
+    # Implement the sigmoid function
+    def sigmoid(self) -> Scalar:
+        """Returns the sigmoid of the current scalar."""
+        return Sigmoid.apply(self)
+
+    # Implement the relu function
+    def relu(self) -> Scalar:
+        """Returns the ReLU of the current scalar."""
+        return ReLU.apply(self)
 
 
 def derivative_check(f: Any, *scalars: Scalar) -> None:
-    """Checks that autodiff works on a python function.
-    Asserts False if derivative is incorrect.
+    """Checks that autodiff works on a Python function and asserts False if the derivative is incorrect.
 
-    Parameters
-    ----------
-        f : function from n-scalars to 1-scalar.
-        *scalars  : n input scalar values.
+    Args:
+    ----
+        f: A function that takes n scalars as input and returns 1 scalar.
+        *scalars: n input scalar values.
 
     """
     out = f(*scalars)
     out.backward()
 
     err_msg = """
-Derivative check at arguments f(%s) and received derivative f'=%f for argument %d,
-but was expecting derivative f'=%f from central difference."""
+            Derivative check at arguments f(%s) and received derivative f'=%f for argument %d,
+            but was expecting derivative f'=%f from central difference."""
     for i, x in enumerate(scalars):
         check = central_difference(f, *scalars, arg=i)
         print(str([x.data for x in scalars]), x.derivative, i, check)

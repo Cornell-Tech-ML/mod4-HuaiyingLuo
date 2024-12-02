@@ -91,8 +91,40 @@ def _tensor_conv1d(
     s2 = weight_strides
 
     # TODO: Implement for Task 4.1.
-    raise NotImplementedError("Need to implement for Task 4.1")
+    for out_pos in prange(out_size):
+        out_idx: Index = np.zeros(3, np.int32)
+        input_idx: Index = np.zeros(3, np.int32)
+        weight_idx: Index = np.zeros(3, np.int32)
 
+        to_index(out_pos, out_shape, out_idx)
+        batch_idx, out_channel_idx, out_width_idx = out_idx
+        conv_sum = 0.0
+        for in_channel_idx in range(in_channels):
+            for kernel_width_idx in range(kw):
+                if not reverse:
+                    if (out_width_idx + kernel_width_idx) >= width:
+                        conv_sum += 0.0
+                    else:
+                        weight_idx[0] = out_channel_idx
+                        weight_idx[1] = in_channel_idx
+                        weight_idx[2] = kernel_width_idx
+                        input_idx[0] = batch_idx
+                        input_idx[1] = in_channel_idx
+                        input_idx[2] = out_width_idx + kernel_width_idx
+                        conv_sum += input[index_to_position(input_idx, s1)] * weight[index_to_position(weight_idx, s2)]
+                else:
+                    if (out_width_idx - kernel_width_idx) < 0:
+                        conv_sum += 0.0
+                    else:
+                        weight_idx[0] = out_channel_idx
+                        weight_idx[1] = in_channel_idx
+                        weight_idx[2] = kernel_width_idx
+                        input_idx[0] = batch_idx
+                        input_idx[1] = in_channel_idx
+                        input_idx[2] = out_width_idx - kernel_width_idx
+                        conv_sum += input[index_to_position(input_idx, s1)] * weight[index_to_position(weight_idx, s2)]
+
+        out[index_to_position(out_idx, out_strides)] = conv_sum
 
 tensor_conv1d = njit(_tensor_conv1d, parallel=True)
 
@@ -220,8 +252,44 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    for out_pos in prange(out_size):
+        out_idx: Index = np.zeros(4, np.int32)
+        weight_index: Index = np.zeros(4, np.int32)
+        in_idx: Index = np.zeros(4, np.int32)
+        to_index(out_pos, out_shape, out_idx)
+        batch_idx, out_ch_idx, out_h_idx, out_w_idx = out_idx
+        conv_val = 0.0
 
+        for in_ch_idx in range(in_channels):
+            for k_h in range(kh):
+                for k_w in range(kw):
+                    if not reverse:
+                        weight_index[0] = out_ch_idx
+                        weight_index[1] = in_ch_idx
+                        weight_index[2] = k_h
+                        weight_index[3] = k_w
+                        in_idx[0] = batch_idx
+                        in_idx[1] = in_ch_idx
+                        in_idx[2] = out_h_idx + k_h
+                        in_idx[3] = out_w_idx + k_w
+                        if out_h_idx + k_h >= height or out_w_idx + k_w >= width:
+                            conv_val += 0.0
+                        else:
+                            conv_val += weight[index_to_position(weight_index, s2)] * input[index_to_position(in_idx, s1)]
+                    else:
+                        weight_index[0] = out_ch_idx
+                        weight_index[1] = in_ch_idx
+                        weight_index[2] = k_h
+                        weight_index[3] = k_w
+                        in_idx[0] = batch_idx
+                        in_idx[1] = in_ch_idx
+                        in_idx[2] = out_h_idx - k_h
+                        in_idx[3] = out_w_idx - k_w
+                        if out_h_idx - k_h < 0 or out_w_idx - k_w < 0:
+                            conv_val += 0.0
+                        else:
+                            conv_val += weight[index_to_position(weight_index, s2)] * input[index_to_position(in_idx, s1)]
+        out[index_to_position(out_idx, out_strides)] = conv_val
 
 tensor_conv2d = njit(_tensor_conv2d, parallel=True, fastmath=True)
 

@@ -34,3 +34,24 @@ python sync_previous_module.py previous-module-dir current-module-dir
 The files that will be synced are:
 
         minitorch/tensor_data.py minitorch/tensor_functions.py minitorch/tensor_ops.py minitorch/operators.py minitorch/scalar.py minitorch/scalar_functions.py minitorch/module.py minitorch/autodiff.py minitorch/module.py project/run_manual.py project/run_scalar.py project/run_tensor.py minitorch/operators.py minitorch/module.py minitorch/autodiff.py minitorch/tensor.py minitorch/datasets.py minitorch/testing.py minitorch/optim.py minitorch/tensor_ops.py minitorch/fast_ops.py minitorch/cuda_ops.py project/parallel_check.py tests/test_tensor_general.py
+
+Run marked test:
+
+```
+pytest -m task4_1
+```
+
+* Set up the environment
+
+```
+source mod4env/bin/activate
+```
+
+To install packages use:
+
+```
+python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements.extra.txt
+```
+
+

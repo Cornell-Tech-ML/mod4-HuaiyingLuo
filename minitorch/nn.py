@@ -47,23 +47,20 @@ def tile(input: Tensor, kernel: Tuple[int, int]) -> Tuple[Tensor, int, int]:
     return reshaped_input, pooled_height, pooled_width
 
 
-
-# TODO: Implement for Task 4.3.
 def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
-    """Tiled average pooling 2D
+    """Tiled average pooling 2D.
 
     Args:
-        input : batch x channel x height x width
-        kernel : height x width of pooling
+        input (Tensor): batch x channel x height x width
+        kernel (Tuple[int, int]): height x width of pooling
 
     Returns:
-        Pooled tensor
+        Tensor: Pooled tensor
     """
-    batch, channel, height, width = input.shape
+    batch, channel, _, _ = input.shape
     tiled_input, _, _ = tile(input, kernel)
     pooled_tensor = tiled_input.mean(dim=4)
     pooled_tensor = pooled_tensor.view(batch, channel, pooled_tensor.shape[2], pooled_tensor.shape[3])
-    
     return pooled_tensor
 
 
@@ -74,13 +71,11 @@ def argmax(input: Tensor, dim: int) -> Tensor:
     """Compute the argmax as a 1-hot tensor.
 
     Args:
-        input : input tensor
-        dim : dimension to apply argmax
-
+        input (Tensor): input tensor
+        dim (int): dimension to apply argmax
 
     Returns:
-        :class:`Tensor` : tensor with 1 on highest cell in dim, 0 otherwise
-
+        Tensor: tensor with 1 on highest cell in dim, 0 otherwise
     """
     out = max_reduce(input, dim)
     return out == input
@@ -88,86 +83,81 @@ def argmax(input: Tensor, dim: int) -> Tensor:
 
 class Max(Function):
     @staticmethod
-    def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
-        "Forward of max should be max reduction"
-        max_red = max_reduce(input, int(dim.item()))
-        ctx.save_for_backward(input, max_red)
-        return max_red
+    def forward(ctx: Context, input_tensor: Tensor, dimension: Tensor) -> Tensor:
+        """Forward of max should be max reduction."""
+        max_reduction = max_reduce(input_tensor, int(dimension.item()))
+        ctx.save_for_backward(input_tensor, max_reduction)
+        return max_reduction
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
-        "Backward of max should be argmax (see above)"
-        (input, max_red) = ctx.saved_values
-        return (grad_output * (max_red == input)), 0.0
+    def backward(ctx: Context, gradient_output: Tensor) -> Tuple[Tensor, float]:
+        """Backward of max should be argmax."""
+        input_tensor, max_reduction = ctx.saved_values
+        return (gradient_output * (max_reduction == input_tensor)), 0.0
 
 
-# minitorch.max
 def max(input: Tensor, dim: int) -> Tensor:
+    """Apply max reduction."""
     return Max.apply(input, input._ensure_tensor(dim))
 
 
-# minitorch.softmax
 def softmax(input: Tensor, dim: int) -> Tensor:
-    r"""Compute the softmax as a tensor.
+    """Compute the softmax as a tensor.
 
     Args:
-        input : input tensor
-        dim : dimension to apply softmax
+        input (Tensor): input tensor
+        dim (int): dimension to apply softmax
 
     Returns:
-        softmax tensor
+        Tensor: softmax tensor
     """
-    t = input.exp()
-    s = t.sum(dim)
-    return t / s
+    exp_input = input.exp()
+    sum_exp = exp_input.sum(dim)
+    return exp_input / sum_exp
 
 
-# minitorch.logsoftmax
 def logsoftmax(input: Tensor, dim: int) -> Tensor:
-    r"""Compute the log of the softmax as a tensor.
+    """Compute the log of the softmax as a tensor.
 
     Args:
-        input : input tensor
-        dim : dimension to apply log-softmax
+        input (Tensor): input tensor
+        dim (int): dimension to apply log-softmax
 
     Returns:
-         log of softmax tensor
+        Tensor: log of softmax tensor
     """
-    t = input.exp()
-    t = t.sum(dim)
-    t = t.log()
-    return input - t
+    exp_input = input.exp()
+    sum_exp_input = exp_input.sum(dim)
+    log_sum_exp_input = sum_exp_input.log()
+    return input - log_sum_exp_input
 
 
-# minitorch.maxpool2d
 def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
-    """Tiled max pooling 2D
+    """Tiled max pooling 2D.
 
     Args:
-        input: batch x channel x height x width
-        kernel: height x width of pooling
+        input (Tensor): batch x channel x height x width
+        kernel (Tuple[int, int]): height x width of pooling
 
     Returns:
-        Tensor : pooled tensor
+        Tensor: pooled tensor
     """
-    batch, channel, _, _ = input.shape
-    t, _, _ = tile(input, kernel)
-    t = max(t, 4)
-    t = t.view(batch, channel, t.shape[2], t.shape[3])
-    return t
+    batch_size, num_channels, _, _ = input.shape
+    tiled_input, pooled_height, pooled_width = tile(input, kernel)
+    pooled_input = max_reduce(tiled_input, 4)
+    return pooled_input.contiguous().view(batch_size, num_channels, pooled_height, pooled_width)
 
 
-# minitorch.dropout
 def dropout(input: Tensor, rate: float, ignore: bool = False) -> Tensor:
     """Dropout positions based on random noise.
 
     Args:
-        input : input tensor
-        rate : probability [0, 1) of dropping out each position
-        ignore : skip dropout, i.e. do nothing at all
+        input (Tensor): input tensor
+        rate (float): probability [0, 1) of dropping out each position
+        ignore (bool): skip dropout, i.e. do nothing at all
 
     Returns:
-        tensor with randoom positions dropped out
+        Tensor: tensor with random positions dropped out
     """
     if not ignore:
         rand_tensor = rand(input.shape)

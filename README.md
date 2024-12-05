@@ -55,6 +55,17 @@ To install packages use:
 ```
 python3 -m pip install -r requirements.txt
 python3 -m pip install -r requirements.extra.txt
+python3 -m pip install -Ue .
+```
+
+# Train the model
+To train a model on Sentiment (SST2):
+```
+python project/run_sentiment.py
+```
+To train a model on Digit classification (MNIST):
+```
+python project/run_mnist_multiclass.py
 ```
 
 

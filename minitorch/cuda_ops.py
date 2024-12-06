@@ -480,7 +480,7 @@ def _tensor_matrix_multiply(
 
     for k_start in range(0, a_shape[2], BLOCK_DIM):
         k = k_start + pj
-        if i < a_shape[1] and k <a_shape[2]:
+        if i < a_shape[1] and k < a_shape[2]:
             a_shared[pi, pj] = a_storage[
                 a_batch_stride * batch + a_strides[1] * i + a_strides[2] * k
             ]

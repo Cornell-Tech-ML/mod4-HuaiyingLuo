@@ -47,7 +47,8 @@ pytest -m task4_4
 * Set up the environment
 
 ```
-source mod4env/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 ```
 
 To install packages use:

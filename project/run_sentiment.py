@@ -73,13 +73,18 @@ class CNNSentimentKim(minitorch.Module):
         embeddings tensor: [batch x sentence length x embedding dim]
         """
         # TODO: Implement for Task 4.5.
+        # 1. Apply a 1d convolution followed by a non-linear activation function
         x = embeddings.permute(0, 2, 1)
         x1 = self.conv1(x).relu()
         x2 = self.conv2(x).relu()
         x3 = self.conv3(x).relu()
+        # 2. Apply max-over-time across each feature map, time dimension is 2
         x = minitorch.max(x1, 2) + minitorch.max(x2, 2) + minitorch.max(x3, 2)
-        x = self.linear(x.view(x.shape[0], self.feature_map_size))
+        # 3. Apply a Linear to size C (number of classes) followed by a ReLU and Dropout with rate 25%
+        x = x.view(x.shape[0], self.feature_map_size)
+        x = self.linear(x)
         x = minitorch.dropout(x, self.dropout, not self.training)
+        # 4. Apply a sigmoid over the class dimension.
         x = x.sigmoid().view(x.shape[0])
         return x
 

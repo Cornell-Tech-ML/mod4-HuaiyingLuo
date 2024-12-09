@@ -38,15 +38,15 @@ def tile(input: Tensor, kernel: Tuple[int, int]) -> Tuple[Tensor, int, int]:
     # TODO: Implement for Task 4.3.
     pooled_height: int = height // kh
     pooled_width: int = width // kw
-    reshaped_input = input.permute(0, 1, 3, 2)
-    reshaped_input = reshaped_input.contiguous()
-    reshaped_input = reshaped_input.view(batch, channel, width, pooled_height, kh)
-    reshaped_input = reshaped_input.permute(0, 1, 3, 2, 4)
-    reshaped_input = reshaped_input.contiguous()
-    reshaped_input = reshaped_input.view(
+    output = input.permute(0, 1, 3, 2)
+    output = output.contiguous()
+    output = output.view(batch, channel, width, pooled_height, kh)
+    output = output.permute(0, 1, 3, 2, 4)
+    output = output.contiguous()
+    output = output.view(
         batch, channel, pooled_height, pooled_width, kh * kw
     )
-    return reshaped_input, pooled_height, pooled_width
+    return output, pooled_height, pooled_width
 
 
 def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
@@ -93,17 +93,16 @@ def argmax(input: Tensor, dim: int) -> Tensor:
 
 class Max(Function):
     @staticmethod
-    def forward(ctx: Context, input_tensor: Tensor, dimension: Tensor) -> Tensor:
+    def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
         """Forward of max should be max reduction."""
-        max_reduction = max_reduce(input_tensor, int(dimension.item()))
-        ctx.save_for_backward(input_tensor, max_reduction)
-        return max_reduction
+        ctx.save_for_backward(input, int(dim.item()))
+        return max_reduce(input, int(dim.item()))
 
     @staticmethod
-    def backward(ctx: Context, gradient_output: Tensor) -> Tuple[Tensor, float]:
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Backward of max should be argmax."""
-        input_tensor, max_reduction = ctx.saved_values
-        return (gradient_output * (max_reduction == input_tensor)), 0.0
+        (input, dim) = ctx.saved_values
+        return argmax(input, dim) * grad_output, 0.0
 
 
 def max(input: Tensor, dim: int) -> Tensor:
@@ -161,11 +160,11 @@ def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
         Tensor: pooled tensor
 
     """
-    batch_size, num_channels, _, _ = input.shape
+    batch, channel, _, _ = input.shape
     tiled_input, pooled_height, pooled_width = tile(input, kernel)
     pooled_input = max_reduce(tiled_input, 4)
     return pooled_input.contiguous().view(
-        batch_size, num_channels, pooled_height, pooled_width
+        batch, channel, pooled_height, pooled_width
     )
 
 

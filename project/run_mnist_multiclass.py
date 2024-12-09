@@ -74,7 +74,7 @@ class Network(minitorch.Module):
 
     def forward(self, x):
         # TODO: Implement for Task 4.5.
-        # 1. Apply a convolution with 4 output channels and a 3x3 kernel followed by a ReLU (save to self.mid)  
+        # 1. Apply a convolution with 4 output channels and a 3x3 kernel followed by a ReLU (save to self.mid)
         x = self.conv1(x).relu()
         self.mid = x
         # 2. Apply a convolution with 8 output channels and a 3x3 kernel followed by a ReLU (save to self.out)

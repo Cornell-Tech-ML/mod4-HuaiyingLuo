@@ -43,9 +43,7 @@ def tile(input: Tensor, kernel: Tuple[int, int]) -> Tuple[Tensor, int, int]:
     output = output.view(batch, channel, width, pooled_height, kh)
     output = output.permute(0, 1, 3, 2, 4)
     output = output.contiguous()
-    output = output.view(
-        batch, channel, pooled_height, pooled_width, kh * kw
-    )
+    output = output.view(batch, channel, pooled_height, pooled_width, kh * kw)
     return output, pooled_height, pooled_width
 
 
@@ -163,9 +161,7 @@ def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     batch, channel, _, _ = input.shape
     tiled_input, pooled_height, pooled_width = tile(input, kernel)
     pooled_input = max_reduce(tiled_input, 4)
-    return pooled_input.contiguous().view(
-        batch, channel, pooled_height, pooled_width
-    )
+    return pooled_input.contiguous().view(batch, channel, pooled_height, pooled_width)
 
 
 def dropout(input: Tensor, rate: float, ignore: bool = False) -> Tensor:

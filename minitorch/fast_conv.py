@@ -112,7 +112,8 @@ def _tensor_conv1d(
                         in_indx[1] = in_channel_idx
                         in_indx[2] = out_height_idx + kernel_width_idx
                         conv_sum += (
-                            input[index_to_position(in_indx, s1)] * weight[index_to_position(weight_idx, s2)]
+                            input[index_to_position(in_indx, s1)]
+                            * weight[index_to_position(weight_idx, s2)]
                         )
                 else:
                     if (out_height_idx - kernel_width_idx) < 0:
@@ -125,7 +126,8 @@ def _tensor_conv1d(
                         in_indx[1] = in_channel_idx
                         in_indx[2] = out_height_idx - kernel_width_idx
                         conv_sum += (
-                            input[index_to_position(in_indx, s1)] * weight[index_to_position(weight_idx, s2)]
+                            input[index_to_position(in_indx, s1)]
+                            * weight[index_to_position(weight_idx, s2)]
                         )
 
         out[index_to_position(out_idx, out_strides)] = conv_sum
@@ -290,7 +292,8 @@ def _tensor_conv2d(
                             conv_sum += 0.0
                         else:
                             conv_sum += (
-                                weight[index_to_position(weight_index, s2)]* input[index_to_position(in_idx, s1)]
+                                weight[index_to_position(weight_index, s2)]
+                                * input[index_to_position(in_idx, s1)]
                             )
                     else:
                         weight_index[0] = out_ch_idx
@@ -305,7 +308,8 @@ def _tensor_conv2d(
                             conv_sum += 0.0
                         else:
                             conv_sum += (
-                                weight[index_to_position(weight_index, s2)]* input[index_to_position(in_idx, s1)]
+                                weight[index_to_position(weight_index, s2)]
+                                * input[index_to_position(in_idx, s1)]
                             )
         out[index_to_position(out_idx, out_strides)] = conv_sum
 

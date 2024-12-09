@@ -42,8 +42,7 @@ class Conv2d(minitorch.Module):
 
     def forward(self, input):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
-
+        return minitorch.conv2d(input, self.weights.value) + self.bias.value
 
 class Network(minitorch.Module):
     """
@@ -68,11 +67,31 @@ class Network(minitorch.Module):
         self.out = None
 
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        self.conv1 = Conv2d(1, 4, 3, 3)
+        self.conv2 = Conv2d(4, 8, 3, 3)
+        self.linear1 = Linear(392, 64)
+        self.linear2 = Linear(64, C)
 
     def forward(self, x):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # 1. Apply a convolution with 4 output channels and a 3x3 kernel followed by a ReLU (save to self.mid)
+        x = self.conv1(x).relu()
+        self.mid = x
+        # 2. Apply a convolution with 8 output channels and a 3x3 kernel followed by a ReLU (save to self.out)
+        x = self.conv2(x).relu()
+        self.out = x
+        # 3. Apply 2D pooling (either Avg or Max) with 4x4 kernel.
+        x = minitorch.avgpool2d(x, (4, 4))
+        # 4. Flatten channels, height, and width. (Should be size BATCHx392)
+        x = x.view(BATCH, 392)
+        # 5. Apply a Linear to size 64 followed by a ReLU and Dropout with rate 25%
+        x = self.linear1(x).relu()
+        x = minitorch.dropout(x, 0.25, not self.training)
+        # 6. Apply a Linear to size C (number of classes).
+        x = self.linear2(x)
+        # 7. Apply a logsoftmax over the class dimension.
+        x = minitorch.logsoftmax(x, 1)
+        return x
 
 
 def make_mnist(start, stop):
